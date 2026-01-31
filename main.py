@@ -14,9 +14,12 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 async def on_ready():
     print(f"Бот запущен как {bot.user}")
     await bot.tree.sync()
-    print("Slash-команды синхронизированы")
 
-@bot.tree.command(name="calculation", description="Сравнение выгодности товаров")
+
+@bot.tree.command(
+    name="calculation",
+    description="Сравнение выгодности двух товаров"
+)
 @app_commands.describe(
     price_a="Цена товара A",
     sale_a="Цена продажи товара A",
@@ -33,16 +36,26 @@ async def calculation(
     profit_a = sale_a - price_a
     profit_b = sale_b - price_b
 
-    result = (
-        "✅ Выгоднее вариант A" if profit_a > profit_b else
-        "✅ Выгоднее вариант B" if profit_b > profit_a else
-        "⚖️ Оба варианта одинаковы"
-    )
+    if profit_a > profit_b:
+        result = "✅ **Выгоднее вариант A**"
+    elif profit_b > profit_a:
+        result = "✅ **Выгоднее вариант B**"
+    else:
+        result = "⚖️ **Оба варианта одинаково выгодны**"
 
-    await interaction.response.send_message(
-        f"Товар A: прибыль {profit_a}\n"
-        f"Товар B: прибыль {profit_b}\n\n"
+    response = (
+        f"📊 **Результаты расчёта:**\n\n"
+        f"**Товар A**\n"
+        f"Цена товара: {price_a}\n"
+        f"Цена продажи: {sale_a}\n"
+        f"Прибыль: **{profit_a}**\n\n"
+        f"**Товар B**\n"
+        f"Цена товара: {price_b}\n"
+        f"Цена продажи: {sale_b}\n"
+        f"Прибыль: **{profit_b}**\n\n"
         f"{result}"
     )
+
+    await interaction.response.send_message(response)
 
 bot.run(TOKEN)
