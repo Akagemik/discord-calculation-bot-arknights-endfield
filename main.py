@@ -6,12 +6,15 @@ import os
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 intents = discord.Intents.default()
+intents.message_content = True
+
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
     print(f"Бот запущен как {bot.user}")
     await bot.tree.sync()
+    print("Slash-команды синхронизированы")
 
 @bot.tree.command(name="calculation", description="Сравнение выгодности товаров")
 @app_commands.describe(
@@ -20,12 +23,13 @@ async def on_ready():
     price_b="Цена товара B",
     sale_b="Цена продажи товара B"
 )
-async def calculation(interaction: discord.Interaction,
+async def calculation(
+    interaction: discord.Interaction,
     price_a: float,
     sale_a: float,
     price_b: float,
-    sale_b: float):
-
+    sale_b: float
+):
     profit_a = sale_a - price_a
     profit_b = sale_b - price_b
 
