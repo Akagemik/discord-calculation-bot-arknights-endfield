@@ -3,7 +3,6 @@ from discord import app_commands
 from discord.ext import commands
 import os
 
-# Токен берётся из переменной окружения
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 intents = discord.Intents.default()
