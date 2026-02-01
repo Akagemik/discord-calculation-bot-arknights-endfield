@@ -23,22 +23,22 @@ async def on_ready():
 )
 async def help_command(interaction: discord.Interaction):
     embed = discord.Embed(
-        title=":information_source: Помощь",
+        title="ℹ️ Помощь",
         description=(
-            f":wave: **Доброго времени суток, {interaction.user.mention}!**\n\n"
+            f"👋 **Доброго времени суток, {interaction.user.mention}!**\n\n"
             "На данный момент вы можете использовать **одну команду**:\n"
             "**`/calculation`** — расчёт выгодности товаров.\n\n"
             "**Как правильно использовать команду:**\n"
-            "```⁩\n"
+            "```\n"
             "/calculation\n"
             "Цена товара A: 10\n"
             "Цена продажи товара A: 15\n"
             "Цена товара B: 12\n"
             "Цена продажи товара B: 16\n"
             "Количество для продажи: 320\n"
-            "⁨```\n"
-            "Я автоматически посчитаю прибыль и покажу, "
-            "какой вариант будет выгоднее - если сами не можете решить."
+            "```\n"
+            "Бот автоматически посчитает прибыль и покажет, "
+            "какой вариант выгоднее."
         ),
         color=discord.Color.blurple()
     )
@@ -70,7 +70,7 @@ async def calculation(
 ):
     if quantity <= 0:
         await interaction.response.send_message(
-            ":x: Количество должно быть больше 0",
+            "❌ Количество должно быть больше 0",
             ephemeral=True
         )
         return
@@ -85,23 +85,23 @@ async def calculation(
     total_profit_b = profit_b * quantity
 
     if total_profit_a > total_profit_b:
-        result = f":white_check_mark: Выгоднее вариант **A** (за {quantity} шт.)"
+        result = f"✅ Выгоднее вариант **A** (за {quantity} шт.)"
         color = discord.Color.green()
     elif total_profit_b > total_profit_a:
-        result = f":white_check_mark: Выгоднее вариант **B** (за {quantity} шт.)"
+        result = f"✅ Выгоднее вариант **B** (за {quantity} шт.)"
         color = discord.Color.blue()
     else:
-        result = f":scales: Оба варианта одинаково выгодны (за {quantity} шт.)"
+        result = f"⚖️ Оба варианта одинаково выгодны (за {quantity} шт.)"
         color = discord.Color.light_grey()
 
     embed = discord.Embed(
-        title=":bar_chart: Результаты расчёта",
+        title="📊 Результаты расчёта",
         description=result,
         color=color
     )
 
     embed.add_field(
-        name=":a: Товар A",
+        name="🅰️ Товар A",
         value=(
             f"Цена товара: `{price_a}`\n"
             f"Цена продажи: `{sale_a}`\n"
@@ -113,7 +113,7 @@ async def calculation(
     )
 
     embed.add_field(
-        name=":b: Товар B",
+        name="🅱️ Товар B",
         value=(
             f"Цена товара: `{price_b}`\n"
             f"Цена продажи: `{sale_b}`\n"
