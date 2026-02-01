@@ -9,12 +9,20 @@ from datetime import datetime, timedelta
 TOKEN = os.getenv("DISCORD_TOKEN")
 DATA_FILE = "reminders.json"
 
+# ================= НАСТРОЙКА ВРЕМЕНИ =================
+# 🔧 ТЕСТ
+REMINDER_DELAY = timedelta(seconds=10)
+
+# 🔁 ПРОД (ВЕРНУТЬ ПОСЛЕ ТЕСТОВ)
+# REMINDER_DELAY = timedelta(hours=24)
+# ====================================================
+
 intents = discord.Intents.default()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# ================== DATA ==================
+# ================= DATA =================
 
 def load_data():
     if not os.path.exists(DATA_FILE):
@@ -24,11 +32,11 @@ def load_data():
 
 def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
+        json.dump(data, f, indent=4, ensure_ascii=False)
 
 reminders = load_data()
 
-# ================== REMINDER TASK ==================
+# ================= REMINDER TASK =================
 
 async def reminder_task(user_id: int):
     data = reminders.get(str(user_id))
@@ -49,14 +57,14 @@ async def reminder_task(user_id: int):
         title="⏰ Напоминание",
         description=(
             "Вы не забыли сделать **ежедневную отметку**?\n\n"
-            "Хотите, чтобы я напомнил завтра?"
+            "Хотите продолжить напоминания?"
         ),
         color=discord.Color.orange()
     )
 
     await user.send(embed=embed, view=ContinueMarkView(user_id))
 
-# ================== VIEWS ==================
+# ================= VIEWS =================
 
 class MarkSetupView(discord.ui.View):
     def __init__(self, user_id):
@@ -84,7 +92,8 @@ class MarkTodayView(discord.ui.View):
 
     @discord.ui.button(label="Да", style=discord.ButtonStyle.green)
     async def yes(self, interaction: discord.Interaction, button: discord.ui.Button):
-        next_time = datetime.utcnow() + timedelta(seconds=10)
+        next_time = datetime.utcnow() + REMINDER_DELAY
+
         reminders[str(self.user_id)] = {
             "active": True,
             "next_time": next_time.isoformat()
@@ -95,7 +104,7 @@ class MarkTodayView(discord.ui.View):
 
         embed = discord.Embed(
             title="✅ Метка установлена",
-            description="Следующее напоминание будет через **24 часа**.",
+            description=f"Следующее напоминание через **{int(REMINDER_DELAY.total_seconds())} сек.**",
             color=discord.Color.green()
         )
 
@@ -104,7 +113,7 @@ class MarkTodayView(discord.ui.View):
     @discord.ui.button(label="Нет", style=discord.ButtonStyle.red)
     async def no(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.edit_message(
-            content="Понял 🙂 Тогда не забудьте отметиться сегодня.",
+            content="Хорошо 🙂 Не забудьте отметиться позже.",
             view=None
         )
 
@@ -115,15 +124,15 @@ class ContinueMarkView(discord.ui.View):
 
     @discord.ui.button(label="Да", style=discord.ButtonStyle.green)
     async def yes(self, interaction: discord.Interaction, button: discord.ui.Button):
-        next_time = datetime.utcnow() + timedelta(seconds=10)
+        next_time = datetime.utcnow() + REMINDER_DELAY
         reminders[str(self.user_id)]["next_time"] = next_time.isoformat()
         save_data(reminders)
 
         bot.loop.create_task(reminder_task(self.user_id))
 
         embed = discord.Embed(
-            title="⏱️ Продлено",
-            description="Я напомню вам снова через **24 часа**.",
+            title="⏱ Продлено",
+            description="Напоминание продлено.",
             color=discord.Color.green()
         )
 
@@ -136,7 +145,7 @@ class ContinueMarkView(discord.ui.View):
 
         embed = discord.Embed(
             title="❌ Отключено",
-            description="Напоминание больше не активно.",
+            description="Напоминание отключено.",
             color=discord.Color.red()
         )
 
@@ -157,18 +166,20 @@ class DisableMarkView(discord.ui.View):
             description="Ежедневные напоминания отключены.",
             color=discord.Color.red()
         )
+
         await interaction.response.edit_message(embed=embed, view=None)
 
     @discord.ui.button(label="Нет", style=discord.ButtonStyle.green)
     async def no(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
-            title="ℹ️ Без изменений",
+            title="ℹ Без изменений",
             description="Напоминание остаётся активным.",
             color=discord.Color.green()
         )
+
         await interaction.response.edit_message(embed=embed, view=None)
 
-# ================== READY ==================
+# ================= READY =================
 
 @bot.event
 async def on_ready():
@@ -179,26 +190,25 @@ async def on_ready():
         if data.get("active"):
             bot.loop.create_task(reminder_task(int(user_id)))
 
-# ================== HELP ==================
+# ================= HELP =================
 
 @bot.tree.command(name="help", description="Информация о доступных командах")
 async def help_command(interaction: discord.Interaction):
     embed = discord.Embed(
         title="ℹ️ Помощь",
         description=(
-            f"👋 **Доброго времени суток, {interaction.user.mention}!**\n\n"
+            f"👋 **Привет, {interaction.user.mention}!**\n\n"
             "**Доступные команды:**\n"
-            "• `/calculation` — расчёт выгодности\n"
-            "• `/mark` — напоминание об отметках\n"
-            "• `/mark_status` — статус метки"
+            "• `/calculation` — экономический расчёт\n"
+            "• `/mark` — ежедневные отметки"
         ),
         color=discord.Color.blurple()
     )
+
     embed.set_footer(text="Arknights Endfield • Help")
     await interaction.response.send_message(embed=embed)
 
-# ================== CALCULATION ==================
-# (ТВОЙ КОД — БЕЗ ИЗМЕНЕНИЙ)
+# ================= CALCULATION =================
 
 @bot.tree.command(name="calculation", description="Сравнение выгодности двух товаров")
 @app_commands.describe(
@@ -220,30 +230,23 @@ async def calculation(
         await interaction.response.send_message(":x: Количество должно быть больше 0", ephemeral=True)
         return
 
-    profit_a = sale_a - price_a
-    profit_b = sale_b - price_b
+    profit_a = (sale_a - price_a) * quantity
+    profit_b = (sale_b - price_b) * quantity
 
-    total_profit_a = profit_a * quantity
-    total_profit_b = profit_b * quantity
+    better = "A" if profit_a > profit_b else "B" if profit_b > profit_a else "Одинаково"
 
-    if total_profit_a > total_profit_b:
-        result = f"✅ Выгоднее вариант **A**"
-        color = discord.Color.green()
-    elif total_profit_b > total_profit_a:
-        result = f"✅ Выгоднее вариант **B**"
-        color = discord.Color.blue()
-    else:
-        result = "⚖️ Оба варианта одинаково выгодны"
-        color = discord.Color.light_grey()
+    embed = discord.Embed(
+        title="📊 Результаты расчёта",
+        description=f"**Выгоднее:** {better}",
+        color=discord.Color.green()
+    )
 
-    embed = discord.Embed(title="📊 Результаты расчёта", description=result, color=color)
-    embed.add_field(name="🅰️ Товар A", value=f"Прибыль: `{total_profit_a}`", inline=False)
-    embed.add_field(name="🅱️ Товар B", value=f"Прибыль: `{total_profit_b}`", inline=False)
-    embed.set_footer(text="Arknights Endfield • Экономический расчёт")
+    embed.add_field(name="🅰️ Товар A", value=f"Прибыль: `{profit_a}`", inline=False)
+    embed.add_field(name="🅱️ Товар B", value=f"Прибыль: `{profit_b}`", inline=False)
 
     await interaction.response.send_message(embed=embed)
 
-# ================== MARK ==================
+# ================= MARK =================
 
 @bot.tree.command(name="mark", description="Ежедневные отметки")
 async def mark(interaction: discord.Interaction):
@@ -252,9 +255,10 @@ async def mark(interaction: discord.Interaction):
     if user_id in reminders and reminders[user_id].get("active"):
         embed = discord.Embed(
             title="📌 Метка уже установлена",
-            description="Вы уже поставили метку.\n\nХотите отключить напоминание?",
+            description="Вы уже поставили метку.\nХотите отключить?",
             color=discord.Color.orange()
         )
+
         await interaction.response.send_message(
             embed=embed,
             view=DisableMarkView(interaction.user.id),
@@ -273,30 +277,5 @@ async def mark(interaction: discord.Interaction):
         view=MarkSetupView(interaction.user.id),
         ephemeral=True
     )
-
-# ================== MARK STATUS ==================
-
-@bot.tree.command(name="mark_status", description="Статус ежедневной метки")
-async def mark_status(interaction: discord.Interaction):
-    user_id = str(interaction.user.id)
-
-    if user_id not in reminders or not reminders[user_id].get("active"):
-        embed = discord.Embed(
-            title="📭 Метка не установлена",
-            description="У вас нет активного напоминания.",
-            color=discord.Color.light_grey()
-        )
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-        return
-
-    next_time = datetime.fromisoformat(reminders[user_id]["next_time"])
-    unix = int(next_time.timestamp())
-
-    embed = discord.Embed(
-        title="📬 Метка активна",
-        description=f"Следующее напоминание:\n<t:{unix}:F>",
-        color=discord.Color.green()
-    )
-    await interaction.response.send_message(embed=embed, ephemeral=True)
 
 bot.run(TOKEN)
