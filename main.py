@@ -26,9 +26,11 @@ async def help_command(interaction: discord.Interaction):
         title="ℹ️ Помощь",
         description=(
             f"👋 **Доброго времени суток, {interaction.user.mention}!**\n\n"
-            "На данный момент вы можете использовать **одну команду**:\n"
-            "**`/calculation`** — расчёт выгодности товаров.\n\n"
-            "**Как правильно использовать команду:**\n"
+            "На данный момент вы можете использовать следующие команды:\n\n"
+
+            "🔹 **`/calculation`** — расчёт выгодности товаров.\n"
+            "Используется для сравнения прибыли между двумя товарами.\n\n"
+            "**Пример использования:**\n"
             "```\n"
             "/calculation\n"
             "Цена товара A: 10\n"
@@ -36,9 +38,14 @@ async def help_command(interaction: discord.Interaction):
             "Цена товара B: 12\n"
             "Цена продажи товара B: 16\n"
             "Количество для продажи: 320\n"
-            "```\n"
-            "Бот автоматически посчитает прибыль и покажет, "
-            "какой вариант выгоднее."
+            "```\n\n"
+
+            "🎮 **`/gachi`** — меню выбора гачи.\n"
+            "Позволяет выбрать одну из доступных гач:\n"
+            "• Arknights: Endfield\n"
+            "• Zenless Zone Zero\n"
+            "• Genshin Impact\n\n"
+            "⚠️ На данный момент находятся **в разработке**."
         ),
         color=discord.Color.blurple()
     )
@@ -46,6 +53,7 @@ async def help_command(interaction: discord.Interaction):
     embed.set_footer(text="Arknights Endfield • Help")
 
     await interaction.response.send_message(embed=embed)
+
 
 
 # ---------- CALCULATION ----------
@@ -128,5 +136,53 @@ async def calculation(
 
     await interaction.response.send_message(embed=embed)
 
+# ================== /gachi ==================
+
+# ================== ЦВЕТА ==================
+
+COLOR_MAIN = discord.Color.blurple()
+COLOR_DEV = discord.Color.orange()
+
+# ================== VIEW С КНОПКАМИ ==================
+
+class GachiView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=60)
+
+    async def in_dev(self, interaction: discord.Interaction):
+        embed = discord.Embed(
+            title="🚧 В разработке",
+            description="Данный режим ещё находится в разработке.\nСледите за обновлениями!",
+            color=COLOR_DEV
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @discord.ui.button(label="Arknights: Endfield", style=discord.ButtonStyle.primary)
+    async def arknights(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.in_dev(interaction)
+
+    @discord.ui.button(label="Zenless Zone Zero", style=discord.ButtonStyle.primary)
+    async def zzz(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.in_dev(interaction)
+
+    @discord.ui.button(label="Genshin Impact", style=discord.ButtonStyle.primary)
+    async def genshin(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.in_dev(interaction)
+
+# ================== SLASH-КОМАНДА ==================
+
+@bot.tree.command(name="gachi", description="Выбор гачи")
+async def gachi(interaction: discord.Interaction):
+    embed = discord.Embed(
+        title="🎮 Выбор гачи",
+        description="Выберите одну из гачи, нажав на соответствующую кнопку:",
+        color=COLOR_MAIN
+    )
+    embed.set_footer(text="")
+
+    await interaction.response.send_message(
+        embed=embed,
+        view=GachiView()
+    )
 
 bot.run(TOKEN)
