@@ -178,11 +178,12 @@ async def gachi(interaction: discord.Interaction):
         description="Выберите одну из гачи, нажав на соответствующую кнопку:",
         color=COLOR_MAIN
     )
-    embed.set_footer(text="")
+    embed.set_footer(text="Gachi System")
 
     await interaction.response.send_message(
         embed=embed,
         view=GachiView()
     )
 
+# ================== READY ==================
 bot.run(TOKEN)
